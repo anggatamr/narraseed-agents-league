@@ -20,7 +20,24 @@ def build_prompt(
     foundry: dict[str, Any],
     style: str = "dramatic",
 ) -> str:
-    data_lines = [f"Index {i}: {y}" for i, (_, y) in enumerate(data_points)]
+    # Downsample points for prompt size optimization (Ollama CPU speedup)
+    max_pts = 12
+    n_points = len(data_points)
+    if n_points <= max_pts:
+        sampled_points = [(i, y) for i, (_, y) in enumerate(data_points)]
+    else:
+        # Guarantee start, end, turning points, and evenly spaced indices
+        idx_set = {0, n_points - 1}
+        for tp in turning_points:
+            idx_set.add(int(tp["index"]))
+        # Add evenly spaced indices
+        for i in range(1, max_pts - 1):
+            idx_set.add(int(i * (n_points - 1) / (max_pts - 1)))
+        
+        sorted_indices = sorted(list(idx_set))
+        sampled_points = [(idx, data_points[idx][1]) for idx in sorted_indices]
+
+    data_lines = [f"Index {idx}: {y:.2f}" for idx, y in sampled_points]
     turning_lines = [
         f"{tp['direction']} at index {int(tp['index'])} from {tp['value_before']:.2f} to {tp['value_after']:.2f}"
         for tp in turning_points
@@ -34,11 +51,11 @@ Guidelines: {foundry['narrative_guidelines']}
 Opening template: {foundry['opening_template']}
 Climax template: {foundry['climax_template']}
 Resolution template: {foundry['resolution_template']}
-Data points:
+Data points (subset):
 {chr(10).join(data_lines)}
 Turning points:
 {chr(10).join(turning_lines)}
-Generate a compact narrative story in three phases: opening, climax, resolution.
+Generate a compact narrative story in three phases: opening, climax, resolution. Keep it brief (under 3 paragraphs).
 Include explicit citations referencing actual data points and the knowledge base.
 """
     return prompt.strip()
@@ -56,7 +73,10 @@ def generate_narrative(
         "model": OLLAMA_MODEL,
         "prompt": prompt,
         "stream": False,
-        "max_tokens": 512,
+        "options": {
+            "num_predict": 256,
+            "temperature": 0.7,
+        }
     }
     try:
         timeout = httpx.Timeout(float(OLLAMA_TIMEOUT), connect=3.0)
