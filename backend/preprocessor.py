@@ -11,33 +11,138 @@ from sklearn.gaussian_process.kernels import RBF, WhiteKernel
 logger = logging.getLogger(__name__)
 
 
+def parse_csv_robust(df: pd.DataFrame) -> tuple[list[tuple[float, float]], list[str], dict[str, Any]]:
+    """Intelligently parse a DataFrame into time-series data.
+    
+    Detects entity/categorical columns for filtering, date/time columns for sorting,
+    and numeric columns for value target.
+    """
+    entity_col = None
+    entity_val = None
+    potential_entity_cols = ["entity", "code", "country", "state", "category", "group", "name"]
+    for col in df.columns:
+        if col.lower() in potential_entity_cols:
+            entity_col = col
+            break
+            
+    if entity_col is not None:
+        counts = df[entity_col].value_counts()
+        valid_entities = counts[counts >= 5].index.tolist()
+        if valid_entities:
+            entity_val = valid_entities[0]
+            df = df[df[entity_col] == entity_val].copy()
+            
+    x_col = None
+    x_labels = []
+    
+    potential_time_cols = ["date", "time", "year", "month", "week", "day", "timestamp", "semester", "period"]
+    for col in df.columns:
+        if col.lower() in potential_time_cols:
+            x_col = col
+            break
+            
+    if x_col is None:
+        for col in df.columns:
+            if df[col].dtype == object or isinstance(df[col].dtype, pd.DatetimeTZDtype):
+                try:
+                    parsed = pd.to_datetime(df[col], errors='coerce')
+                    if parsed.notna().sum() > 0.8 * len(df):
+                        x_col = col
+                        break
+                except:
+                    pass
+
+    if x_col is not None:
+        if x_col.lower() in ["date", "time", "timestamp"] or df[x_col].dtype == object:
+            df['__parsed_time__'] = pd.to_datetime(df[x_col], errors='coerce')
+            df = df.dropna(subset=['__parsed_time__'])
+            df = df.sort_values('__parsed_time__')
+            x_labels = df[x_col].astype(str).tolist()
+            df = df.drop(columns=['__parsed_time__'])
+        else:
+            df = df.sort_values(x_col)
+            x_labels = df[x_col].astype(str).tolist()
+    else:
+        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        if numeric_cols:
+            x_col = numeric_cols[0]
+            df = df.sort_values(x_col)
+            x_labels = [f"Point {i}" for i in range(len(df))]
+        else:
+            x_labels = [f"Point {i}" for i in range(len(df))]
+            
+    y_col = None
+    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    if x_col in numeric_cols:
+        numeric_cols.remove(x_col)
+        
+    if numeric_cols:
+        y_col = numeric_cols[0]
+    else:
+        for col in df.columns:
+            if col != x_col:
+                try:
+                    df[col] = df[col].astype(float)
+                    y_col = col
+                    break
+                except:
+                    pass
+                    
+    if y_col is None:
+        raise ValueError("No numeric data columns found in the CSV.")
+        
+    x_vals = list(range(len(df)))
+    y_vals = df[y_col].astype(float).tolist()
+    data_points = list(zip(x_vals, y_vals))
+    
+    metadata = {
+        "x_column": x_col or "Index",
+        "y_column": y_col,
+        "entity_column": entity_col,
+        "entity_value": entity_val,
+        "message": f"Parsed X from '{x_col or 'Index'}', Y from '{y_col}'" + (f" (filtered by {entity_col}='{entity_val}')" if entity_val else "")
+    }
+    
+    return data_points, x_labels, metadata
+
+
 def normalize_timeseries(
-    data: list[tuple[float, float]] | str,
+    data: list[tuple[float, float]] | pd.DataFrame | str,
     gpr_smooth: bool = False,
     gpr_kernel: Any = None,
 ) -> dict[str, Any]:
     """Load time-series data and normalize values to [0, 1].
 
     Args:
-        data: Either a list of (x, y) tuples or a CSV file path.
+        data: Either a list of (x, y) tuples, a pandas DataFrame, or a CSV file path.
         gpr_smooth: If True, compute smoothed values using Gaussian Process.
         gpr_kernel: Optional kernel for GaussianProcessRegressor.
 
     Returns:
         A dictionary with normalized and original data, plus stats.
     """
+    x_labels = []
+    metadata = {}
+    
     if isinstance(data, str):
         df = pd.read_csv(data)
-        if df.shape[1] < 2:
-            raise ValueError("CSV must contain at least two columns.")
-        x = df.iloc[:, 0].astype(float).to_numpy()
-        y = df.iloc[:, 1].astype(float).to_numpy()
+        data_points, x_labels, metadata = parse_csv_robust(df)
+        x, y = zip(*data_points)
+        x = np.asarray(x, dtype=float)
+        y = np.asarray(y, dtype=float)
+    elif isinstance(data, pd.DataFrame):
+        data_points, x_labels, metadata = parse_csv_robust(data)
+        x, y = zip(*data_points)
+        x = np.asarray(x, dtype=float)
+        y = np.asarray(y, dtype=float)
     else:
         if not data:
             raise ValueError("Input data cannot be empty.")
         x, y = zip(*data)
         x = np.asarray(x, dtype=float)
         y = np.asarray(y, dtype=float)
+        x_labels = [str(val) for val in x]
+        metadata = {"x_column": "X", "y_column": "Y", "message": "Parsed direct values"}
 
     if len(x) < 2:
         raise ValueError("At least two data points are required.")
@@ -67,6 +172,8 @@ def normalize_timeseries(
         "y_normalized": y_normalized.tolist(),
         "x_original": x.tolist(),
         "y_original": y.tolist(),
+        "x_labels": x_labels,
+        "metadata": metadata,
         "stats": {
             "min": y_min,
             "max": y_max,
@@ -90,3 +197,4 @@ def normalize_timeseries(
 
     logger.debug("Normalized %d points", len(y))
     return result
+

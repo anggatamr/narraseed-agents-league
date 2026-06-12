@@ -108,10 +108,11 @@ async function analyzeFile(file) {
       });
       
       dataCitations.forEach(c => {
+        const xLabel = data.x_labels && data.x_labels[c.index] ? data.x_labels[c.index] : `Index ${c.index}`;
         citationsHTML += `
           <div style="background-color: #FAF5EE; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #8FAE7E;">
-            <strong style="color: #2D2A26;">📊 Data Point ${c.index}</strong><br>
-            <small style="color: #9C9689;">Value: ${c.value.toFixed(3)}</small>
+            <strong style="color: #2D2A26;">📊 Data Point: ${xLabel}</strong><br>
+            <small style="color: #9C9689;">Value: ${c.value.toLocaleString(undefined, {maximumFractionDigits: 3})}</small>
           </div>
         `;
       });
@@ -119,16 +120,12 @@ async function analyzeFile(file) {
       citationsList.innerHTML = citationsHTML;
     }
 
+    // Call the D3 timeline renderer defined in timeline.js
     renderTimeline("timeline", data);
   } catch (error) {
     storyText.textContent = `❌ Error: ${error.message}`;
     citationsList.innerHTML = `<p style="color: #E07B5C;">${error.message}</p>`;
   }
-}
-
-function renderTimeline(containerId, data) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = "<p>Timeline rendered.</p>";
 }
 
 analyzeButton.addEventListener("click", () => {

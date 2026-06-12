@@ -54,6 +54,8 @@ class AnalyzeResponse(BaseModel):
     citations: list[dict[str, Any]]
     segments: list[dict[str, Any]]
     grounding: dict[str, Any]
+    x_labels: list[str] | None = None
+    metadata: dict[str, Any] | None = None
 
 
 @app.get("/api/health", response_model=HealthResponse)
@@ -73,26 +75,28 @@ async def samples() -> list[SampleItem]:
 
 @app.post("/api/analyze", response_model=AnalyzeResponse)
 async def analyze(file: UploadFile = File(...), style: str = Form("dramatic")) -> AnalyzeResponse:
-    if file.content_type not in {"text/csv", "application/vnd.ms-excel"}:
-        raise HTTPException(status_code=400, detail="Invalid CSV format. Need at minimum 2 columns.")
-
     content = await file.read()
     try:
         df = pd.read_csv(io.BytesIO(content))
+        normalized = normalize_timeseries(df)
     except Exception as exc:
-        logger.error("CSV read failed: %s", exc)
-        raise HTTPException(status_code=400, detail="Invalid CSV format. Need at minimum 2 columns.")
+        logger.error("CSV processing failed: %s", exc)
+        raise HTTPException(status_code=400, detail=f"Invalid CSV format or parsing failed: {str(exc)}")
 
-    if df.shape[1] < 2:
-        raise HTTPException(status_code=400, detail="Invalid CSV format. Need at minimum 2 columns.")
-
-    data = list(zip(df.iloc[:, 0].astype(float).tolist(), df.iloc[:, 1].astype(float).tolist()))
-    normalized = normalize_timeseries(data)
+    x_original = normalized["x_original"]
+    y_original = normalized["y_original"]
+    data = list(zip(x_original, y_original))
+    
     values = np.asarray(normalized["y_normalized"], dtype=float)
     turning_points = detect_turning_points(values)
     arc_result = match_arc(normalized["y_normalized"])
     foundry = get_narrative_template(arc_result["arc_name"])
+    
     narrative = generate_narrative(arc_result["arc_name"], data, turning_points, foundry, style)
+    
+    # Add labels and metadata to response
+    narrative["x_labels"] = normalized.get("x_labels")
+    narrative["metadata"] = normalized.get("metadata")
 
     return AnalyzeResponse(**narrative)
 

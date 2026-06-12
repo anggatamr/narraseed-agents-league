@@ -59,7 +59,8 @@ def generate_narrative(
         "max_tokens": 512,
     }
     try:
-        with httpx.Client(timeout=OLLAMA_TIMEOUT) as client:
+        timeout = httpx.Timeout(connect=3.0, read=float(OLLAMA_TIMEOUT))
+        with httpx.Client(timeout=timeout) as client:
             response = client.post(f"{OLLAMA_ENDPOINT}/api/generate", json=payload)
             response.raise_for_status()
         result = response.json()

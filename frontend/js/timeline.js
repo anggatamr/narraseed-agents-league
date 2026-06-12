@@ -51,6 +51,36 @@ function renderTimeline(containerId, data) {
     .domain([0, 1])
     .range([height, 0]);
 
+  // Custom formatted X Axis using parsed date/time labels
+  const xAxis = d3.axisBottom(xScale);
+  if (data.x_labels && data.x_labels.length > 0) {
+    xAxis.tickFormat((d) => {
+      const idx = Math.round(d);
+      return data.x_labels[idx] !== undefined ? data.x_labels[idx] : idx;
+    });
+  }
+
+  // Create or select floating tooltip
+  let tooltip = d3.select("body").select(".timeline-tooltip");
+  if (tooltip.empty()) {
+    tooltip = d3
+      .select("body")
+      .append("div")
+      .attr("class", "timeline-tooltip")
+      .style("position", "absolute")
+      .style("visibility", "hidden")
+      .style("background-color", "#FFFFFF")
+      .style("border", "1px solid #E8E2DA")
+      .style("padding", "8px 12px")
+      .style("border-radius", "12px")
+      .style("box-shadow", "0 4px 16px rgba(45, 42, 38, 0.08)")
+      .style("font-family", "'Plus Jakarta Sans', sans-serif")
+      .style("font-size", "14px")
+      .style("color", "#2D2A26")
+      .style("z-index", "1000")
+      .style("pointer-events", "none");
+  }
+
   // Draw grid
   svg
     .append("g")
@@ -93,11 +123,54 @@ function renderTimeline(containerId, data) {
     .attr("opacity", 0.15)
     .attr("d", area);
 
+  // Draw dots for all data points
+  svg
+    .selectAll(".data-dot")
+    .data(dataPoints)
+    .enter()
+    .append("circle")
+    .attr("class", "data-dot")
+    .attr("cx", (d) => xScale(d.x))
+    .attr("cy", (d) => yScale(d.y))
+    .attr("r", 3.5)
+    .attr("fill", "#C67B5C")
+    .attr("stroke", "#FFFFFF")
+    .attr("stroke-width", 1)
+    .attr("opacity", 0.8)
+    .style("cursor", "pointer")
+    .on("mouseover", function (event, d) {
+      d3.select(this)
+        .transition()
+        .duration(150)
+        .attr("r", 5.5)
+        .attr("fill", "#B56A4B");
+        
+      const xLabel = data.x_labels && data.x_labels[d.x] ? data.x_labels[d.x] : `Point ${d.x}`;
+      const origCitation = data.citations.find(c => c.type === 'data' && c.index === d.x);
+      const displayVal = origCitation ? origCitation.value : d.y;
+      
+      tooltip
+        .style("visibility", "visible")
+        .html(`<strong>${xLabel}</strong><br/>Value: ${typeof displayVal === 'number' ? displayVal.toLocaleString(undefined, {maximumFractionDigits: 3}) : displayVal}`);
+    })
+    .on("mousemove", function (event) {
+      tooltip
+        .style("top", (event.pageY - 45) + "px")
+        .style("left", (event.pageX + 15) + "px");
+    })
+    .on("mouseout", function () {
+      d3.select(this)
+        .transition()
+        .duration(150)
+        .attr("r", 3.5)
+        .attr("fill", "#C67B5C");
+      tooltip.style("visibility", "hidden");
+    });
+
   // Draw turning points
   if (data.segments && data.segments.length > 0) {
     const turningIndices = [];
     try {
-      // Extract turning points from story text or use evenly spaced markers
       const segmentCount = Math.min(5, Math.max(2, Math.floor(dataPoints.length / 3)));
       for (let i = 0; i < segmentCount; i++) {
         turningIndices.push(Math.floor((i * dataPoints.length) / segmentCount));
@@ -118,24 +191,39 @@ function renderTimeline(containerId, data) {
       .attr("class", "turning-point")
       .attr("cx", (d) => xScale(d.x))
       .attr("cy", (d) => yScale(d.y))
-      .attr("r", 5)
+      .attr("r", 7)
       .attr("fill", "#8FAE7E")
       .attr("stroke", "#FFFFFF")
-      .attr("stroke-width", 2)
+      .attr("stroke-width", 2.5)
       .style("cursor", "pointer")
-      .on("mouseover", function () {
+      .style("filter", "drop-shadow(0px 2px 4px rgba(0,0,0,0.1))")
+      .on("mouseover", function (event, d) {
         d3.select(this)
           .transition()
           .duration(200)
-          .attr("r", 7)
+          .attr("r", 9.5)
           .attr("fill", "#C67B5C");
+
+        const xLabel = data.x_labels && data.x_labels[d.x] ? data.x_labels[d.x] : `Point ${d.x}`;
+        const origCitation = data.citations.find(c => c.type === 'data' && c.index === d.x);
+        const displayVal = origCitation ? origCitation.value : d.y;
+        
+        tooltip
+          .style("visibility", "visible")
+          .html(`<strong>✨ Turning Point</strong><br/><strong>${xLabel}</strong><br/>Value: ${typeof displayVal === 'number' ? displayVal.toLocaleString(undefined, {maximumFractionDigits: 3}) : displayVal}`);
+      })
+      .on("mousemove", function (event) {
+        tooltip
+          .style("top", (event.pageY - 45) + "px")
+          .style("left", (event.pageX + 15) + "px");
       })
       .on("mouseout", function () {
         d3.select(this)
           .transition()
           .duration(200)
-          .attr("r", 5)
+          .attr("r", 7)
           .attr("fill", "#8FAE7E");
+        tooltip.style("visibility", "hidden");
       });
   }
 
@@ -143,14 +231,15 @@ function renderTimeline(containerId, data) {
   svg
     .append("g")
     .attr("transform", `translate(0,${height})`)
-    .call(d3.axisBottom(xScale))
+    .call(xAxis)
     .append("text")
     .attr("x", width / 2)
     .attr("y", 35)
     .attr("fill", "#5C5750")
     .attr("text-anchor", "middle")
     .attr("font-size", "12px")
-    .text("Time");
+    .attr("font-weight", "500")
+    .text(data.metadata?.x_column ? `Time (${data.metadata.x_column})` : "Time");
 
   // Y-axis
   svg
@@ -164,7 +253,8 @@ function renderTimeline(containerId, data) {
     .attr("fill", "#5C5750")
     .attr("text-anchor", "middle")
     .attr("font-size", "12px")
-    .text("Value");
+    .attr("font-weight", "500")
+    .text(data.metadata?.y_column ? `Value (${data.metadata.y_column})` : "Value");
 
   // Arc badge
   const badgeContainer = document.createElement("div");
