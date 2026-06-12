@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "narraseed": {
+      "command": "python",
+      "args": ["backend/mcp/mcp_server.py"],
+      "cwd": "${workspaceFolder}"
+    }
+  }
+}

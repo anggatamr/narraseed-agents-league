@@ -1,0 +1,26 @@
+# Web Framework & API
+fastapi==0.115.12
+uvicorn[standard]==0.30.0
+pydantic==2.9.0
+python-multipart==0.0.9
+
+# Local LLM Integration
+httpx==0.27.0
+
+# Azure AI Search — Foundry IQ (Knowledge Base)
+azure-search-documents==11.6.0
+azure-identity==1.17.0
+
+# Data Science & Statistics
+numpy==2.4.6
+pandas==3.0.3
+scikit-learn==1.9.0
+scipy==1.17.1
+fastdtw==0.3.4
+
+# MCP Server (GitHub Copilot)
+fastmcp==2.0.0
+
+# Testing & Dev
+pytest==8.3.0
+python-dotenv==1.0.1

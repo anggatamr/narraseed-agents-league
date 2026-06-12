@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NarraSeed — Temporal Narrative Intelligence</title>
+    <meta
+      name="description"
+      content="Transform time-series data into dramatized, interactive stories"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/design-tokens.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <span aria-hidden="true">🌱</span>
+        <h1>NarraSeed</h1>
+      </div>
+      <nav aria-label="Main navigation">
+        <a href="#">About</a>
+        <a href="#">GitHub</a>
+      </nav>
+    </header>
+    <main>
+      <aside class="sidebar">
+        <section class="card" id="upload-section">
+          <h2>Upload CSV</h2>
+          <input type="file" id="csv-upload" accept="text/csv" aria-label="Upload CSV file" />
+          <button class="primary" id="analyze-button">Analyze</button>
+        </section>
+        <section class="card" id="samples-list">
+          <h2>Sample Data</h2>
+          <button class="primary" id="sample-gpa">Student GPA Journey</button>
+          <button class="primary" id="sample-startup">Startup Revenue</button>
+          <button class="primary" id="sample-fitness">Fitness Progress</button>
+        </section>
+      </aside>
+      <section class="content">
+        <section class="card timeline-card" id="timeline-container">
+          <h2>Timeline</h2>
+          <div id="timeline">Loading timeline...</div>
+        </section>
+        <section class="card story-card" id="story-panel">
+          <h2>Story</h2>
+          <p id="story-text">Upload a CSV or choose a sample to generate a narrative.</p>
+        </section>
+        <section class="card citations-card" id="citations-panel">
+          <h2>Citations</h2>
+          <div id="citations-list">
+            <p>No citations yet.</p>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script src="js/app.js"></script>
+    <script src="js/timeline.js"></script>
+    <script src="js/narrator.js"></script>
+  </body>
+</html>

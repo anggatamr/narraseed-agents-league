@@ -1,0 +1,32 @@
+# Environment
+.env
+.env.local
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Data (keep samples, ignore user uploads)
+backend/data/uploads/
+
+# Secrets
+*.key
+*.pem
