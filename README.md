@@ -5,9 +5,38 @@
 
 ---
 
+## 📽️ Demo Video
+Watch the 5-minute project walk-through and demo:  
+**[NarraSeed Demo Video (YouTube)](https://youtu.be/your-video-id-here)** *(Replace with your actual uploaded unlisted video URL)*
+
+---
+
+## 👥 Participant Information
+- **Entrant Name:** Angga Tamara
+- **Microsoft Learn Username:** [AnggaTamara-1496](https://learn.microsoft.com/en-us/users/anggatamara-1496/)
+
+---
+
 ## What It Does
 
 **NarraSeed** turns flat, hard-to-parse numerical columns into engaging, accessible, and structured stories. By analyzing raw time-series data, it detects critical transitions, maps the overall pattern to human storytelling structures (narrative arcs), grounds itself in verified narrative templates via **Azure AI Search (Foundry IQ)**, and uses a local **Mistral-7B LLM (Ollama)** to draft an interactive narrative. The results are rendered in a warm, responsive dashboard with a custom D3.js timeline and synchronized text-to-speech voice narration.
+
+---
+
+## 🏆 Hackathon & Judging Alignment
+
+NarraSeed is custom-engineered to excel across all five core evaluation pillars of the **Agents League Contest**:
+
+1. **Accuracy & Relevance (20%)**  
+   Strictly adheres to the Creative Apps challenge. It uses **GitHub Copilot** as the primary AI developer assistant for writing, debugging, and styling. Furthermore, it integrates a core **Microsoft IQ** intelligence layer: **Foundry IQ (Azure AI Search)**, to ground AI outputs in verified narrative guidelines.
+2. **Reasoning & Multi-step Thinking (20%)**  
+   Processes data through a multi-stage statistical and AI reasoning pipeline: Min-Max normalization → PELT changepoint segmentation → Dynamic Time Warping (DTW) arc classification → Azure Search grounding → local LLM prompt engineering → client rendering.
+3. **Creativity & Originality (15%)**  
+   Solves the abstract problem of dry data tables by transforming numbers into interactive, high-fidelity narrative journeys. Integrates synthesized web-speech narration that highlights spoken text in real-time.
+4. **User Experience & Presentation (15%)**  
+   Features a responsive, Gen-Z warm minimalist dashboard with cream `#FBF8F4` and terracotta `#C67B5C` tones. Built with premium custom D3.js timelines, detailed hover tooltips, and interactive audio controls.
+5. **Reliability & Safety (20%)**  
+   Includes strict system guardrails forbidding the LLM from inventing fictional names, personifying data, or reinterpreting domains (e.g. population metrics are never rewritten as cash). Features a 3-second connection fallback that defaults to local rule-based templates if the LLM is offline.
 
 ---
 
@@ -37,6 +66,10 @@
 
 ## Project Architecture & Data Flow
 
+### Conceptual System Diagram
+![NarraSeed Architecture Diagram](docs/images/architecture.png)
+
+### Data Processing Flow
 ```
                      [ CSV Data / Git History ]
                                  │
@@ -46,8 +79,8 @@
          ┌───────────────────────┴───────────────────────┐
          ▼                                               ▼
 [ Normalize & Parse ]                           [ PELT Detection ]
- - Entity Filtering                              - Regime Transitions
- - Chronological Sorting                         - Segment Arcs
+  - Entity Filtering                              - Regime Transitions
+  - Chronological Sorting                         - Segment Arcs
          │                                               │
          └───────────────────────┬───────────────────────┘
                                  ▼

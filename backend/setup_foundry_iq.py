@@ -44,7 +44,7 @@ fields = [
 
 index = SearchIndex(name=index_name, fields=fields)
 index_client.create_or_update_index(index)
-print(f"✅ Created index: {index_name}")
+print(f"[OK] Created index: {index_name}")
 
 search_client = SearchClient(endpoint=endpoint, index_name=index_name, credential=credential)
 
@@ -118,5 +118,5 @@ narrative_templates = [
 ]
 
 result = search_client.upload_documents(documents=narrative_templates)
-print(f"✅ Uploaded {len(narrative_templates)} narrative templates to Foundry IQ")
-print(f"✅ Knowledge Base ready at: {endpoint}/indexes/{index_name}")
+print(f"[OK] Uploaded {len(narrative_templates)} narrative templates to Foundry IQ")
+print(f"[OK] Knowledge Base ready at: {endpoint}/indexes/{index_name}")

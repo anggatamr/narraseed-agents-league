@@ -1,32 +1,56 @@
 /**
  * D3.js Timeline Visualization for NarraSeed
  * Renders time-series data with turning points and narrative arc
+ * Responsive: fills its bento cell container
  */
+
+let _timelineResizeObserver = null;
+let _lastTimelineData = null;
 
 function renderTimeline(containerId, data) {
   const container = document.getElementById(containerId);
+  if (!container) return;
   container.innerHTML = "";
+
+  // Store data for resize redraw
+  _lastTimelineData = data;
 
   if (!data || !data.segments || data.segments.length === 0) {
     container.innerHTML = "<p>No timeline data available.</p>";
     return;
   }
 
+  // Create chart area div that fills the container
   const svgContainer = document.createElement("div");
+  svgContainer.className = "chart-area";
   svgContainer.style.width = "100%";
-  svgContainer.style.height = "300px";
+  svgContainer.style.height = "100%";
   svgContainer.style.position = "relative";
+  svgContainer.style.flex = "1";
+  svgContainer.style.minHeight = "0";
   container.appendChild(svgContainer);
 
+  // Use container's actual dimensions (responsive)
+  const containerRect = container.getBoundingClientRect();
+  const rawWidth = containerRect.width || 600;
+  const rawHeight = containerRect.height || 300;
+
   const margin = { top: 20, right: 30, bottom: 40, left: 60 };
-  const width = svgContainer.clientWidth - margin.left - margin.right;
-  const height = svgContainer.clientHeight - margin.top - margin.bottom;
+  const width = rawWidth - margin.left - margin.right;
+  const height = rawHeight - margin.top - margin.bottom;
+
+  if (width <= 0 || height <= 0) {
+    // Container not yet sized — wait for resize
+    return;
+  }
 
   const svg = d3
     .select(svgContainer)
     .append("svg")
-    .attr("width", svgContainer.clientWidth)
-    .attr("height", svgContainer.clientHeight)
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("viewBox", `0 0 ${rawWidth} ${rawHeight}`)
+    .attr("preserveAspectRatio", "xMidYMid meet")
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -46,13 +70,16 @@ function renderTimeline(containerId, data) {
     .domain([0, d3.max(dataPoints, (d) => d.x)])
     .range([0, width]);
 
+  const yExtent = d3.extent(dataPoints, (d) => d.y);
+  const yPadding = (yExtent[1] - yExtent[0]) * 0.08 || 1;
   const yScale = d3
     .scaleLinear()
-    .domain([0, 1])
+    .domain([yExtent[0] - yPadding, yExtent[1] + yPadding])
+    .nice()
     .range([height, 0]);
 
   // Custom formatted X Axis using parsed date/time labels
-  const xAxis = d3.axisBottom(xScale);
+  const xAxis = d3.axisBottom(xScale).ticks(Math.min(dataPoints.length, 8));
   if (data.x_labels && data.x_labels.length > 0) {
     xAxis.tickFormat((d) => {
       const idx = Math.round(d);
@@ -108,12 +135,13 @@ function renderTimeline(containerId, data) {
     .attr("stroke-width", 2.5)
     .attr("d", line);
 
-  // Draw confidence band (light fill)
+  // Draw confidence band (light fill proportional to data range)
+  const bandOffset = (yExtent[1] - yExtent[0]) * 0.05 || 0.5;
   const area = d3
     .area()
     .x((d) => xScale(d.x))
-    .y0((d) => yScale(Math.max(0, d.y - 0.1)))
-    .y1((d) => yScale(Math.min(1, d.y + 0.1)))
+    .y0((d) => yScale(d.y - bandOffset))
+    .y1((d) => yScale(d.y + bandOffset))
     .curve(d3.curveMonotoneX);
 
   svg
@@ -144,11 +172,11 @@ function renderTimeline(containerId, data) {
         .duration(150)
         .attr("r", 5.5)
         .attr("fill", "#B56A4B");
-        
+
       const xLabel = data.x_labels && data.x_labels[d.x] ? data.x_labels[d.x] : `Point ${d.x}`;
       const origCitation = data.citations.find(c => c.type === 'data' && c.index === d.x);
       const displayVal = origCitation ? origCitation.value : d.y;
-      
+
       tooltip
         .style("visibility", "visible")
         .html(`<strong>${xLabel}</strong><br/>Value: ${typeof displayVal === 'number' ? displayVal.toLocaleString(undefined, {maximumFractionDigits: 3}) : displayVal}`);
@@ -167,21 +195,15 @@ function renderTimeline(containerId, data) {
       tooltip.style("visibility", "hidden");
     });
 
-  // Draw turning points
-  if (data.segments && data.segments.length > 0) {
-    const turningIndices = [];
-    try {
-      const segmentCount = Math.min(5, Math.max(2, Math.floor(dataPoints.length / 3)));
-      for (let i = 0; i < segmentCount; i++) {
-        turningIndices.push(Math.floor((i * dataPoints.length) / segmentCount));
-      }
-    } catch {
-      turningIndices.push(Math.floor(dataPoints.length / 2));
-    }
-
-    const turningPoints = turningIndices
-      .filter((idx) => idx < dataPoints.length)
-      .map((idx) => dataPoints[idx]);
+  // Draw turning points from backend analysis
+  if (data.turning_points && data.turning_points.length > 0) {
+    const turningPoints = data.turning_points
+      .map((tp) => {
+        const idx = Math.round(tp.index);
+        const match = dataPoints.find((d) => d.x === idx);
+        return match || null;
+      })
+      .filter(Boolean);
 
     svg
       .selectAll(".turning-point")
@@ -207,10 +229,10 @@ function renderTimeline(containerId, data) {
         const xLabel = data.x_labels && data.x_labels[d.x] ? data.x_labels[d.x] : `Point ${d.x}`;
         const origCitation = data.citations.find(c => c.type === 'data' && c.index === d.x);
         const displayVal = origCitation ? origCitation.value : d.y;
-        
+
         tooltip
           .style("visibility", "visible")
-          .html(`<strong>✨ Turning Point</strong><br/><strong>${xLabel}</strong><br/>Value: ${typeof displayVal === 'number' ? displayVal.toLocaleString(undefined, {maximumFractionDigits: 3}) : displayVal}`);
+          .html(`<strong>Turning Point</strong><br/><strong>${xLabel}</strong><br/>Value: ${typeof displayVal === 'number' ? displayVal.toLocaleString(undefined, {maximumFractionDigits: 3}) : displayVal}`);
       })
       .on("mousemove", function (event) {
         tooltip
@@ -256,18 +278,19 @@ function renderTimeline(containerId, data) {
     .attr("font-weight", "500")
     .text(data.metadata?.y_column ? `Value (${data.metadata.y_column})` : "Value");
 
-  // Arc badge
-  const badgeContainer = document.createElement("div");
-  badgeContainer.style.marginTop = "16px";
-  badgeContainer.innerHTML = `
-    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-      <span class="badge" style="background-color: rgba(198, 123, 92, 0.12); color: #C67B5C; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
-        ${data.arc || "Unknown Arc"}
-      </span>
-      <span class="badge" style="background-color: rgba(143, 174, 126, 0.12); color: #8FAE7E; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
-        Confidence: ${((data.grounding?.confidence || 0.85) * 100).toFixed(0)}%
-      </span>
-    </div>
-  `;
-  container.appendChild(badgeContainer);
+  // Responsive redraw via ResizeObserver
+  if (_timelineResizeObserver) {
+    _timelineResizeObserver.disconnect();
+  }
+  if (window.ResizeObserver) {
+    _timelineResizeObserver = new ResizeObserver(() => {
+      clearTimeout(container._resizeTimer);
+      container._resizeTimer = setTimeout(() => {
+        if (_lastTimelineData) {
+          renderTimeline(containerId, _lastTimelineData);
+        }
+      }, 200);
+    });
+    _timelineResizeObserver.observe(container);
+  }
 }

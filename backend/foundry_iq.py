@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from azure.core.credentials import AzureKeyCredential
@@ -20,6 +20,30 @@ LOCAL_TEMPLATES = {
         "resolution_template": "What started as a whisper of ambition has become a resounding chorus of achievement.",
         "document_id": "rags-to-riches",
     },
+    "Tragedy": {
+        "narrative_guidelines": "Frame the narrative as an irreversible decline, emphasizing the weight of each loss.",
+        "tone": "Somber, reflective, elegiac",
+        "opening_template": "The numbers began strong — confident, even — as if the trajectory could only continue upward.",
+        "climax_template": "But the descent was relentless, each data point marking another step into uncertain territory.",
+        "resolution_template": "What remains is a cautionary record of what was lost and the patterns that went unnoticed.",
+        "document_id": "tragedy",
+    },
+    "Icarus": {
+        "narrative_guidelines": "Frame the narrative as a rise that overextended, followed by a dramatic fall.",
+        "tone": "Dramatic, cautionary, bittersweet",
+        "opening_template": "The ascent was intoxicating — each new high watermark fueling the belief that the climb would never end.",
+        "climax_template": "At the peak, the numbers told a story of triumph — but the warning signs were already written in the margins.",
+        "resolution_template": "The fall came swiftly, proving that even the most spectacular rises are subject to gravity.",
+        "document_id": "icarus",
+    },
+    "Man in a Hole": {
+        "narrative_guidelines": "Frame the narrative as a setback followed by recovery, emphasizing resilience.",
+        "tone": "Resilient, hopeful, grounded",
+        "opening_template": "Things were stable before the drop — the numbers tracking along a comfortable, predictable path.",
+        "climax_template": "Then came the valley — a period where every metric seemed to conspire against recovery.",
+        "resolution_template": "Yet from that low point emerged a comeback, steady and deliberate, rebuilding what was lost.",
+        "document_id": "man-in-a-hole",
+    },
     "Phoenix": {
         "narrative_guidelines": "The crash should be visceral and significant, and the rebirth should be extraordinary.",
         "tone": "Powerful, transformative, awe-inspiring",
@@ -27,6 +51,14 @@ LOCAL_TEMPLATES = {
         "climax_template": "From the lowest point emerged something entirely new — not a return to the old, but a leap beyond it.",
         "resolution_template": "Like the phoenix, this journey proves that sometimes destruction is the prerequisite for transcendence.",
         "document_id": "phoenix",
+    },
+    "Oedipus": {
+        "narrative_guidelines": "Frame the narrative as a fall from grace that eventually finds redemption through a second rise.",
+        "tone": "Complex, redemptive, hard-won",
+        "opening_template": "The beginning carried the weight of high expectations — strong numbers that seemed destined to continue.",
+        "climax_template": "The collapse was both sudden and revealing, exposing the fragility beneath the surface.",
+        "resolution_template": "What followed was not a quick fix but a patient, earned recovery — a second chance built on lessons learned.",
+        "document_id": "oedipus",
     },
 }
 
@@ -63,7 +95,7 @@ def get_narrative_template(arc_name: str) -> dict[str, Any]:
                     "index": env["index"],
                     "document_id": result.get("id", "unknown"),
                     "retrieval_method": "agentic_retrieval",
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 },
             }
     except Exception as exc:
@@ -86,6 +118,6 @@ def _fallback_response(arc_name: str) -> dict[str, Any]:
             "index": env["index"],
             "document_id": template["document_id"],
             "retrieval_method": "fallback",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         },
     }

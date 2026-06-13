@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -60,7 +61,11 @@ class NarraSeedMCP:
             repo_path = Path(input_data.repo_path)
             if not repo_path.exists():
                 raise FileNotFoundError(f"Repository path not found: {repo_path}")
-            git_log = os.popen(f"git -C {repo_path} log --since='1 year ago' --pretty=format:%ad --date=short").read().strip().splitlines()
+            result = subprocess.run(
+                ["git", "-C", str(repo_path), "log", "--since=1 year ago", "--pretty=format:%ad", "--date=short"],
+                capture_output=True, text=True, timeout=30
+            )
+            git_log = result.stdout.strip().splitlines()
             commit_dates = [line.strip() for line in git_log if line.strip()]
             if not commit_dates:
                 raise ValueError("No git history available.")

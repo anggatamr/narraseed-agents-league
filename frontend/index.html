@@ -1,133 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NarraSeed — Temporal Narrative Intelligence</title>
-    <meta
-      name="description"
-      content="Transform time-series data into dramatized, interactive stories"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="css/design-tokens.css" />
+    <meta name="description" content="Transform time-series data into dramatized, interactive stories" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FFF7ED'/%3E%3Cpath d='M16 26 Q16 18 12 14' stroke='%23EA580C' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3Cellipse cx='11' cy='11' rx='4' ry='5.5' fill='%23F97316' transform='rotate(-20 11 11)'/%3E%3Cellipse cx='21' cy='13' rx='4' ry='5' fill='%23FB923C' transform='rotate(15 21 13)'/%3E%3Ccircle cx='16' cy='26' r='2' fill='%23FCD34D'/%3E%3C/svg%3E" />
+    
+    <!-- Font: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css" />
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-  </head>
-  <body>
-    <header>
-      <div class="brand">
-        <span aria-hidden="true">🌱</span>
-        <h1>NarraSeed</h1>
-      </div>
-      <nav aria-label="Main navigation">
-        <a href="#">About</a>
-        <a href="https://github.com/anggatamr/narraseed-agents-league" target="_blank" rel="noopener noreferrer">GitHub</a>
-      </nav>
-    </header>
-    <main>
-      <aside class="sidebar">
-        <!-- Ingestion / Upload Box -->
-        <section class="card" id="upload-section">
-          <h2>Upload Dataset</h2>
-          <div class="file-upload-wrapper">
-            <span class="file-upload-icon" aria-hidden="true">📁</span>
-            <span class="file-upload-text" id="upload-label">Drag & Drop CSV</span>
-            <span class="file-upload-subtext">or click to browse files</span>
-            <input type="file" id="csv-upload" accept="text/csv" aria-label="Upload CSV file" />
-          </div>
-          
-          <div class="style-selector-container" style="margin-top: var(--space-4); margin-bottom: var(--space-4);">
-            <label for="style-select" style="font-size: 11px; font-weight: var(--weight-bold); color: var(--text-muted); text-transform: uppercase;">Writing Style</label>
-            <select id="style-select" class="style-select">
-              <option value="dramatic">Dramatic Narrative</option>
-              <option value="factual">Factual Analysis</option>
-              <option value="poetic">Poetic Chronicle</option>
-            </select>
-          </div>
-          
-          <button class="primary" id="analyze-button">Analyze Data</button>
-        </section>
+</head>
+<body>
 
-        <!-- Sample Datasets Box -->
-        <section class="card" id="samples-list">
-          <h2>Sample Datasets</h2>
-          <button class="sample-btn" id="sample-gpa">
-            <span class="icon">🎓</span> Student GPA Journey
-          </button>
-          <button class="sample-btn" id="sample-startup">
-            <span class="icon">📈</span> Startup Revenue
-          </button>
-          <button class="sample-btn" id="sample-fitness">
-            <span class="icon">🏋️</span> Fitness Progress
-          </button>
-        </section>
-      </aside>
+    <!-- ═══════════════ SIDEBAR ═══════════════ -->
+    <aside class="sidebar">
+        <div class="brand">
+            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 26 Q16 18 12 14" stroke="#EA580C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <ellipse cx="11" cy="11" rx="4" ry="5.5" fill="#F97316" transform="rotate(-20 11 11)"/>
+                <ellipse cx="21" cy="13" rx="4" ry="5" fill="#FB923C" transform="rotate(15 21 13)"/>
+                <circle cx="16" cy="26" r="2" fill="#FCD34D"/>
+            </svg>
+            <h1>NarraSeed</h1>
+        </div>
 
-      <!-- Main Contents Layout -->
-      <section class="content">
-        <!-- Visual Timeline Card with Pipeline Stages -->
-        <section class="card timeline-card" id="timeline-container">
-          <!-- Animated Pipeline Progress Bar -->
-          <div id="pipeline-progress" class="pipeline-progress" style="display: none;">
-            <div class="pipeline-stage" data-stage="0">
-              <div class="stage-dot">1</div>
-              <div class="stage-label">Sort & Clean</div>
+        <div class="upload-section">
+            <span class="section-label">Data Input</span>
+            <div class="file-dropzone file-upload-wrapper" id="dropzone">
+                <i data-lucide="cloud-upload" style="width: 32px; height: 32px; color: var(--accent-primary);"></i>
+                <p class="file-upload-text" id="upload-label">Upload Dataset</p>
+                <span class="file-upload-subtext">Drag & drop CSV or click</span>
+                <input type="file" id="csv-upload" accept="text/csv" style="display: none;" />
             </div>
-            <div class="pipeline-line" data-line="0"></div>
-            <div class="pipeline-stage" data-stage="1">
-              <div class="stage-dot">2</div>
-              <div class="stage-label">PELT Analysis</div>
-            </div>
-            <div class="pipeline-line" data-line="1"></div>
-            <div class="pipeline-stage" data-stage="2">
-              <div class="stage-dot">3</div>
-              <div class="stage-label">DTW Matching</div>
-            </div>
-            <div class="pipeline-line" data-line="2"></div>
-            <div class="pipeline-stage" data-stage="3">
-              <div class="stage-dot">4</div>
-              <div class="stage-label">Foundry IQ</div>
-            </div>
-            <div class="pipeline-line" data-line="3"></div>
-            <div class="pipeline-stage" data-stage="4">
-              <div class="stage-dot">5</div>
-              <div class="stage-label">Ollama LLM</div>
-            </div>
-            <div class="pipeline-line" data-line="4"></div>
-            <div class="pipeline-stage" data-stage="5">
-              <div class="stage-dot">6</div>
-              <div class="stage-label">Render chart</div>
-            </div>
-          </div>
-          
-          <h2>Timeline Visualization</h2>
-          <div id="timeline">Upload a CSV or choose a sample to generate a narrative.</div>
-        </section>
+        </div>
 
-        <!-- Stories Card -->
-        <section class="card story-card" id="story-panel">
-          <h2>Story Generation</h2>
-          <p id="story-text">Select a dataset to begin temporal narrative generation.</p>
-        </section>
+        <div class="upload-section">
+            <span class="section-label">Narrative Style</span>
+            <div class="style-selector">
+                <select id="style-select">
+                    <option value="dramatic">Dramatic Narrative</option>
+                    <option value="factual">Factual Analysis</option>
+                    <option value="poetic">Poetic Chronicle</option>
+                </select>
+            </div>
+        </div>
 
-        <!-- Grounding Citations Card -->
-        <section class="card citations-card" id="citations-panel">
-          <h2>Data Grounding & Citations</h2>
-          <div id="citations-list">
-            <p>No citations yet. NarraSeed cites data facts and knowledge templates to guarantee safety.</p>
-          </div>
-        </section>
-      </section>
+        <button class="btn-analyze" id="analyze-button">
+            <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+            Analyze Data
+        </button>
+
+        <div class="sidebar-pipeline">
+            <div class="section-label">Pipeline Progress</div>
+            <div class="pipeline-progress" id="pipeline-progress">
+                <!-- Progress steps rendered by JS -->
+            </div>
+        </div>
+    </aside>
+
+    <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+    <main class="main-content">
+        <header class="header">
+            <a href="https://github.com/anggatamr/narraseed-agents-league" target="_blank" class="github-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                Star on GitHub
+            </a>
+        </header>
+
+        <div class="bento-grid">
+            <!-- Hero Timeline -->
+            <section class="card cell-timeline">
+                <div class="card-header">
+                    <h2 class="card-title">Timeline Visualization</h2>
+                    <i data-lucide="line-chart" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+                </div>
+                <div id="timeline" style="height: calc(100% - 40px);">
+                    <div class="empty-state timeline-empty">
+                        <i data-lucide="bar-chart-3" style="width: 48px; height: 48px;"></i>
+                        <p class="timeline-empty-text">Upload a dataset to visualize trends</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Arc Match -->
+            <section class="card cell-arc">
+                <div class="card-header">
+                    <h2 class="card-title">Arc Matched</h2>
+                    <i data-lucide="git-branch" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+                </div>
+                <div class="stat-value" id="arc-value">—</div>
+                <div class="stat-sub">Narrative arc detection</div>
+            </section>
+
+            <!-- Confidence -->
+            <section class="card cell-confidence">
+                <div class="card-header">
+                    <h2 class="card-title">Confidence</h2>
+                    <i data-lucide="shield-check" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+                </div>
+                <div class="stat-value" id="confidence-value">—</div>
+                <div class="stat-sub">Arc match score</div>
+            </section>
+
+            <!-- Story Generation -->
+            <section class="card cell-story">
+                <div class="card-header">
+                    <h2 class="card-title">Story Generation</h2>
+                    <div class="story-actions" style="margin-top: 0;">
+                        <button class="btn-secondary btn-voice-play" id="narrate-btn">
+                            <i data-lucide="volume-2" style="width: 14px; height: 14px;"></i>
+                            Listen
+                        </button>
+                        <button class="btn-secondary btn-voice-stop" id="stop-btn" style="display: none;">
+                            <i data-lucide="square" style="width: 14px; height: 14px;"></i>
+                            Stop
+                        </button>
+                    </div>
+                </div>
+                <div class="story-content" id="story-text">
+                    <div class="empty-state story-empty">
+                        <p class="story-empty-text">Waiting for data analysis...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sample Datasets -->
+            <section class="card cell-samples">
+                <div class="card-header">
+                    <h2 class="card-title">Samples</h2>
+                </div>
+                <div class="samples-list">
+                    <button class="sample-item sample-btn" id="sample-gpa">
+                        <div class="sample-icon" style="background-color: #6366F1;">
+                            <i data-lucide="graduation-cap" style="width: 16px; height: 16px; color: #fff;"></i>
+                        </div>
+                        <span class="sample-text sample-label">Student GPA</span>
+                    </button>
+                    <button class="sample-item sample-btn" id="sample-startup">
+                        <div class="sample-icon" style="background-color: #F59E0B;">
+                            <i data-lucide="trending-up" style="width: 16px; height: 16px; color: #fff;"></i>
+                        </div>
+                        <span class="sample-text sample-label">Startup Revenue</span>
+                    </button>
+                    <button class="sample-item sample-btn" id="sample-fitness">
+                        <div class="sample-icon" style="background-color: #10B981;">
+                            <i data-lucide="activity" style="width: 16px; height: 16px; color: #fff;"></i>
+                        </div>
+                        <span class="sample-text sample-label">Fitness Progress</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Data Grounding / Citations -->
+            <section class="card cell-grounding">
+                <div class="card-header">
+                    <h2 class="card-title">Grounding</h2>
+                    <i data-lucide="database" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+                </div>
+                <div class="grounding-list">
+                    <div id="citations-top-list">
+                        <div class="grounding-empty">No grounding templates matched yet.</div>
+                    </div>
+                    <div id="citations-bottom-list">
+                        <div class="grounding-empty">No data facts cited yet.</div>
+                    </div>
+                </div>
+            </section>
+        </div>
     </main>
 
-    <!-- Script loading in proper order -->
+    <!-- Scripts -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="js/narrator.js"></script>
     <script src="js/timeline.js"></script>
     <script src="js/app.js"></script>
-  </body>
+    <script>
+        lucide.createIcons();
+
+        // Dropzone click trigger
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('csv-upload');
+        
+        dropzone.addEventListener('click', () => fileInput.click());
+    </script>
+</body>
 </html>

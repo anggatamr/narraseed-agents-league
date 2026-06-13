@@ -43,7 +43,14 @@ def parse_csv_robust(df: pd.DataFrame) -> tuple[list[tuple[float, float]], list[
             
     if x_col is None:
         for col in df.columns:
-            if df[col].dtype == object or isinstance(df[col].dtype, pd.DatetimeTZDtype):
+            col_dtype = str(df[col].dtype)
+            is_string_like = (
+                df[col].dtype == object
+                or col_dtype == "string"
+                or col_dtype == "str"
+                or isinstance(df[col].dtype, pd.DatetimeTZDtype)
+            )
+            if is_string_like:
                 try:
                     parsed = pd.to_datetime(df[col], errors='coerce')
                     if parsed.notna().sum() > 0.8 * len(df):
@@ -53,7 +60,14 @@ def parse_csv_robust(df: pd.DataFrame) -> tuple[list[tuple[float, float]], list[
                     pass
 
     if x_col is not None:
-        if x_col.lower() in ["date", "time", "timestamp"] or df[x_col].dtype == object:
+        x_dtype_str = str(df[x_col].dtype)
+        is_date_like = (
+            x_col.lower() in ["date", "time", "timestamp"]
+            or df[x_col].dtype == object
+            or x_dtype_str == "string"
+            or x_dtype_str == "str"
+        )
+        if is_date_like:
             df['__parsed_time__'] = pd.to_datetime(df[x_col], errors='coerce')
             df = df.dropna(subset=['__parsed_time__'])
             df = df.sort_values('__parsed_time__')
@@ -90,19 +104,56 @@ def parse_csv_robust(df: pd.DataFrame) -> tuple[list[tuple[float, float]], list[
                     
     if y_col is None:
         raise ValueError("No numeric data columns found in the CSV.")
-        
+
     x_vals = list(range(len(df)))
     y_vals = df[y_col].astype(float).tolist()
     data_points = list(zip(x_vals, y_vals))
-    
+
+    # Capture summary stats for ALL numeric columns (multi-column context)
+    other_numeric_cols = [c for c in numeric_cols if c != y_col]
+    numeric_summaries: dict[str, dict[str, float]] = {}
+    for col in numeric_cols:
+        col_vals = df[col].astype(float).dropna()
+        if len(col_vals) > 0:
+            numeric_summaries[col] = {
+                "mean": float(col_vals.mean()),
+                "min": float(col_vals.min()),
+                "max": float(col_vals.max()),
+                "std": float(col_vals.std()) if len(col_vals) > 1 else 0.0,
+            }
+
+    # Capture categorical columns (e.g. mood)
+    categorical_summaries: dict[str, list[str]] = {}
+    for col in df.columns:
+        if col == x_col:
+            continue
+        is_categorical = (
+            df[col].dtype == object
+            or str(df[col].dtype) == "string"
+            or str(df[col].dtype) == "str"
+            or (hasattr(df[col].dtype, "name") and "string" in str(df[col].dtype.name).lower())
+        )
+        if is_categorical:
+            try:
+                top_vals = df[col].value_counts().head(5).index.tolist()
+                if top_vals:
+                    categorical_summaries[col] = [str(v) for v in top_vals]
+            except Exception:
+                pass
+
     metadata = {
         "x_column": x_col or "Index",
         "y_column": y_col,
         "entity_column": entity_col,
         "entity_value": entity_val,
+        "all_numeric_columns": numeric_cols,
+        "other_numeric_columns": other_numeric_cols,
+        "numeric_summaries": numeric_summaries,
+        "categorical_summaries": categorical_summaries,
+        "total_rows": len(df),
         "message": f"Parsed X from '{x_col or 'Index'}', Y from '{y_col}'" + (f" (filtered by {entity_col}='{entity_val}')" if entity_val else "")
     }
-    
+
     return data_points, x_labels, metadata
 
 
