@@ -14,7 +14,7 @@
 | **Integration Tests** | ✅ 6/6 Passing | All core components validated |
 
 ### System Status
-- 🟢 **Ollama**: Connected (Mistral-7B loaded)
+- 🟢 **Ollama**: Connected (Qwen2.5-1.5B loaded)
 - 🟢 **Azure Search**: Connected (Foundry IQ templates available)
 - 🟢 **FastAPI**: Running on port 8000
 - 🟢 **Frontend Ready**: Assets prepared for localhost:3000
@@ -168,7 +168,7 @@ integrated with VS Code Copilot. Made for Agents League 2026."
 |------|-----------|--------|
 | June 11 | Complete Phase 0-4 | ✅ Done |
 | June 11 | Foundry IQ initialized | ✅ Done |
-| June 11 | Mistral-7B downloaded | ✅ Done |
+| June 11 | Qwen2.5-1.5B downloaded | ✅ Done |
 | June 12 | Phase 5 integration tests | ✅ Done |
 | June 12 | Phase 6 documentation | ✅ Done |
 | June 13 | Record demo video | ⏳ Next |

@@ -1,6 +1,6 @@
 # NarraSeed: Temporal Narrative Intelligence Platform
 
-**NarraSeed** transforms raw time-series data into dramatized, interactive narratives using statistical analysis and AI. Users upload CSV data → the system detects turning points using PELT changepoint detection → matches data patterns to 6 narrative archetypes via Dynamic Time Warping → queries Azure AI Foundry IQ Knowledge Base for grounded narrative templates → generates a compelling story using a local Mistral-7B LLM → renders everything as an interactive D3.js timeline with synchronized voice narration.
+**NarraSeed** transforms raw time-series data into dramatized, interactive narratives using statistical analysis and AI. Users upload CSV data → the system detects turning points using PELT changepoint detection → matches data patterns to 6 narrative archetypes via Dynamic Time Warping → queries Azure AI Foundry IQ Knowledge Base for grounded narrative templates → generates a compelling story using a local Qwen2.5-1.5B LLM → renders everything as an interactive D3.js timeline with synchronized voice narration.
 
 ### Key Innovations
 1. **Statistical Rigor**: A rigorous mathematical pipeline (PELT + DTW) ensures narratives are data-grounded and structured, not hallucinated.
@@ -10,4 +10,4 @@
 
 Built with accessibility in mind, the warm Gen-Z minimalist interface makes complex data understandable and engaging for everyone from students to business analysts.
 
-**Technologies**: Python/FastAPI, Ollama/Mistral-7B, Azure AI Search (Foundry IQ), D3.js, Web Speech API, GitHub Copilot MCP.
+**Technologies**: Python/FastAPI, Ollama/Qwen2.5-1.5B, Azure AI Search (Foundry IQ), D3.js, Web Speech API, GitHub Copilot MCP.

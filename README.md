@@ -19,7 +19,7 @@ Watch the 5-minute project walk-through and demo:
 
 ## What It Does
 
-**NarraSeed** turns flat, hard-to-parse numerical columns into engaging, accessible, and structured stories. By analyzing raw time-series data, it detects critical transitions, maps the overall pattern to human storytelling structures (narrative arcs), grounds itself in verified narrative templates via **Azure AI Search (Foundry IQ)**, and uses a local **Mistral-7B LLM (Ollama)** to draft an interactive narrative. The results are rendered in a warm, responsive dashboard with a custom D3.js timeline and synchronized text-to-speech voice narration.
+**NarraSeed** turns flat, hard-to-parse numerical columns into engaging, accessible, and structured stories. By analyzing raw time-series data, it detects critical transitions, maps the overall pattern to human storytelling structures (narrative arcs), grounds itself in verified narrative templates via **Azure AI Search (Foundry IQ)**, and uses a local **Qwen2.5-1.5B LLM (Ollama)** to draft an interactive narrative. The results are rendered in a warm, responsive dashboard with a custom D3.js timeline and synchronized text-to-speech voice narration.
 
 ---
 
@@ -54,7 +54,7 @@ NarraSeed is custom-engineered to excel across all five core evaluation pillars 
 
 3. **Grounded AI Generation with Citations**
    - **Foundry IQ Grounding**: Connects to Azure AI Search to fetch verified narrative rules, preventing hallucination.
-   - **Ollama Offline-First Core**: Communicates with a local Mistral-7B LLM. Uses a robust connection-timeout system (3.0s limit) to fallback gracefully to predefined templates if Ollama is offline.
+   - **Ollama Offline-First Core**: Communicates with a local Qwen2.5-1.5B LLM. Uses a robust connection-timeout system (3.0s limit) to fallback gracefully to predefined templates if Ollama is offline.
    - **Grounded Citations**: Citations link back to specific CSV indices/values and the exact template document retrieved.
 
 4. **Interactive Dashboard & Voice Sync**
@@ -93,7 +93,7 @@ NarraSeed is custom-engineered to excel across all five core evaluation pillars 
                    - Fallback local templates
                                  │
                                  ▼
-                    [ Ollama Mistral-7B LLM ]
+                    [ Ollama Qwen2.5-1.5B LLM ]
                      - Grounded prompts
                      - 3-second connection fallback
                                  │
@@ -110,7 +110,7 @@ NarraSeed is custom-engineered to excel across all five core evaluation pillars 
 | **Backend** | API | Python 3.11+, FastAPI | Asynchronous performance, automatic Swagger documentation. |
 | **Backend** | Statistics | ruptures, fastdtw, pandas | Robust changepoint and curve-matching mathematics. |
 | **Knowledge** | Grounding | Azure AI Search (Foundry IQ) | Microsoft-compliant agentic knowledge grounding with citations. |
-| **LLM** | Local AI | Ollama (Mistral-7B) | Local execution with zero cost, high privacy, and infinite tokens. |
+| **LLM** | Local AI | Ollama (Qwen2.5-1.5B) | Local execution with zero cost, high privacy, and infinite tokens. |
 | **Frontend** | Interface | Vanilla HTML5, CSS3 Variables | Cozy Gen-Z minimalist look, fast rendering without build steps. |
 | **Frontend** | Visuals | D3.js v7 | Industry-standard vector charting with custom interaction. |
 | **Frontend** | Voice | Web Speech API | Native browser text-to-speech with word boundary tracking. |
@@ -136,7 +136,7 @@ Create a `.env` file in the `backend/` directory:
 ```env
 # ===== LOCAL LLM (Ollama) =====
 OLLAMA_ENDPOINT=http://localhost:11434
-OLLAMA_MODEL=mistral
+OLLAMA_MODEL=qwen2.5:1.5b
 OLLAMA_TIMEOUT=30
 
 # ===== AZURE AI FOUNDRY — FOUNDRY IQ =====

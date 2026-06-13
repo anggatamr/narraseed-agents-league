@@ -24,7 +24,7 @@ The backend API executes a structured 6-stage processing pipeline on every input
 ┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
 │  Stage 1 │ ──> │  Stage 2 │ ──> │  Stage 3 │ ──> │  Stage 4 │ ──> │  Stage 5 │ ──> │  Stage 6 │
 │  Ingest  │     │   PELT   │     │   DTW    │     │Foundry IQ│     │  Ollama  │     │ Render & │
-│& Sort CSV│     │Turning Pt│     │Arc Match │     │Grounding │     │Mistral-7B│     │ Voice    │
+│& Sort CSV│     │Turning Pt│     │Arc Match │     │Grounding │     │ Qwen2.5  │     │ Voice    │
 └──────────┘     └──────────┘     └──────────┘     └──────────┘     └──────────┘     └──────────┘
 ```
 
@@ -60,7 +60,7 @@ The backend API executes a structured 6-stage processing pipeline on every input
   - The retrieved structural guidelines and templates from **Foundry IQ**.
   - The chronological data values (acting as factual anchors).
   - A customizable tone/style parameter (`dramatic`, `factual`, `poetic`).
-- Sends the prompt to a local **Ollama** service running **Mistral-7B**.
+- Sends the prompt to a local **Ollama** service running **Qwen2.5-1.5B**.
 - **Connection Fallback**: Uses a fast 3-second connection timeout. If Ollama is offline or slow to connect, it immediately falls back to compiling a rule-based story using the retrieved templates, avoiding system hangs.
 - Emits citations mapping each story segment to corresponding source indices, raw values, and template documents.
 
@@ -99,7 +99,7 @@ This allows developers to chat with GitHub Copilot in VS Code and get stories ab
 | Tool | Purpose | Advantage |
 |---|---|---|
 | **FastAPI** | REST API | Extremely low overhead, async/await native, automatic Swagger/OpenAPI spec generation. |
-| **Ollama (Mistral)** | Local LLM | No network latency, no subscription/billing, secure offline data processing. |
+| **Ollama (Qwen2.5-1.5B)** | Local LLM | No network latency, no subscription/billing, secure offline data processing. |
 | **Azure AI Search** | Knowledge Grounding | High-performance full-text search, Microsoft ecosystem alignment, structured citation tracking. |
 | **D3.js** | Visual Chart | Crisp SVG rendering, high flexibility for custom annotations, zooming/panning support. |
 | **Web Speech API** | Narration | Built-in browser support, zero API charges, provides event handlers for word-boundary highlights. |
