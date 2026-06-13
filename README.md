@@ -7,7 +7,7 @@
 
 ## 📽️ Demo Video
 Watch the 5-minute project walk-through and demo:  
-**[NarraSeed Demo Video (YouTube)](https://youtu.be/your-video-id-here)** *(Replace with your actual uploaded unlisted video URL)*
+**[NarraSeed Demo Video (YouTube)]([https://youtu.be/your-video-id-here](https://youtu.be/KZp8UENKWPE))** *(Replace with your actual uploaded unlisted video URL)*
 
 ---
 
